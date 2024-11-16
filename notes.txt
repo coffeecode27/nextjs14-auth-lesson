@@ -1,0 +1,210 @@
+==== rule file dan folder didalam nextjs ====
+- folder app berfungsi untuk menyimpan semua file yg berkaitan dengan page atau halaman
+- misalnya, folder auth yg berada didalam app, berfungi untuk menampilkan halaman yg berhubungan dengan auth
+- lalu didalam app juga terdapat folder components, yg berfungsi untuk menyimpan semua component ui
+- misalnya, didalam folder components, terdapat folder auth, itu artinya folder tersebut
+  berfungsi untuk menyimpan semua component ui yg nantinya akan digunakan atau dijalankan didalam page atau halaman auth
+- lalu ada folder action(diluar app) yg berfungsi untuk menyimpan semua fungsi atau proses yang berhubungan dengan server side
+- misalnya, didalam folder action terdapat file login.ts yg berfungsi untuk menangani proses login (server side)
+- lalu ada folder lib yg berfungsi untuk menyimpan semua library yang digunakan, biasanya untuk proses yg berhubungan dengan database
+- misalnya didalam folder lib terdapat file db.ts yg berfungsi untuk mengatur koneksi ke database
+
+==== urutan proses kerja didalam project nextjs ====
+=> membuat page 
+=> membuat component ui
+=> membuat action (jika perlu)
+- page hanya untuk menghandle halaman, sedangkan untuk apa yg akan ditampilkan oleh page berada didalam folder components
+- lalu untuk menggunakan action, kita memanggilnya kedalam component ui
+- sehingga component ui dan action yg sudah di combine akan dijalankan pada page.tsx
+
+===== routing hints =====
+- didalam app, secara default semua folder yg kita buat akan menjadi alamat route atau url
+- namun, jika kita ingin sebuah "nama folder" tidak harus menjadi nama route atau url, kita bisa membungkusnya dengan tanda kurung, misalnya folder (auth)
+- lalu, jika kita ingin sebuah folder dihiraukan sepenuhnya sebagai sebuah route, kita bisa menggunakan underscore, misalnya "_components"
+
+==== Server side and Client Side hints ====
+- didalam nextjs app router, secara default, sebuah page akan di render secara Server Side
+- jika kita ingin melakukan aksi aski yg akan berhubungan dengan client side, misalnya mencetak console pada browser
+  menggunakan hooks, maka kita harus menuliskan convensi "use client" di atas dari file yg membutuhkan aksi client side
+- jadi, karna secara default sebuah page bersifat server side, maka aktifitas yg dilakukan didalamnya akan berhubungan dengan proses
+  async dan await, misalnya seperti proses fetching data dan lain sebagainya
+
+==== Another hints ====
+- gunakan export default hanya ketika membuat sebuah page atau halaman
+- gunakan export const hanya ketika membuat sebuah component ui 
+- pada saat menginstall shadcn di awal membuat project, kita memilih newyork style,
+- yg mana didalamnya sudah include dengan radix-ui/react-icon(dari font awesome) sehingga kita dapat mengguanakn icon tersebut
+- tapi jika kita memilih style lain, misalnya style default, maka icon packagenya juga berbeda, misalnya dari lucide-icon
+
+==== Alur first initial prisma dalam mode pengembang ====
+Pada saat awal aplikasi dijalankan, pada bagian kode export const db = globalThis.prisma || new PrismaClient();,
+akan mengecek apkah globalThis.prisma sudah ada  (yg pastinya belum ada karena aplikasi pertama kali dijalankan),
+maka pilihannya adalah membuat instance baru dari  new PrismaClient(), dan sekarang const db sudah berisi instance dari hasil  new PrismaClient(),
+lalu pada bagian kode "if (process.env.NODE_ENV !== "production") globalThis.prisma = db;" akan mengecek jika sekarang bukan berada di dalam lingkungan production,
+maka set nilai dari global prisma yg telah kita definisikan dengan nilai dari db yg telah berisi instance dari new PrismaClient(),
+lalu pada pemanggilan berikutnya (jika ada perubahan dan terjadi reload), maka akan terjadi pengecekan lagi,
+akan tetapi kali ini tidak akan membuat nilai dari instance baru lagi karena diawal kita sudah meng-set globalThis.prisma dengan nilai dari const db (nilai new instance)
+
+==== prisma hints ====
+- saat kita merubah schema prisma, misalnya menghapus atau menambah model (table), maka setelah itu kita harus melakukan :
+- npx prisma generate : akan men-generate perubah yg kita buat ke delam node modules
+- npx prisma migrate reset : akan mengahpus semua data lama sebelum melakukan push
+- npx prisma db push : akan memasang model baru yg telah di generate ke dalam database
+
+==== Next Auth fact ====
+- Sejak versi terbarunya(authjs v15), banyak perubahan yg terjadi, 
+  seperti import middleware yg sudah dihilangkan dan digantikan dengan (universal)auth call
+
+==== route and auth hints ====
+- jadi, meskipun kita telah melakukan export misalnya handler dari dalam auth.ts
+- kita tetap harus meneruskannya dan melakukan export untuk handler yg sama didalam route.ts
+- ini karena route.ts adalah file yang khusus digunakan untuk menangani rute API di Next.js.
+- Ketika seseorang mengakses /api/auth, Next.js akan mencari handler GET atau POST di file ini.
+- Daripada menulis ulang handler GET dan POST, Anda cukup mengambil handler yang sudah diekspor dari auth.ts
+- dan menyalurkan ke Next.js.
+- dan ini sudah menjadi pola umum untuk menangani rute API didalam Next.js
+
+==== middleware hints ====
+- fakta sebenarnya adalah, ketika kita menuliskan route path atau regex didalam matcher pada middleware,
+- itu bukanlah maksud dari "melindungi" route path, melainkan itu adalah cara untuk menandai path atau url mana
+- yg akan meng-invoke atau mentrigger middleware
+
+==== Callbacks hints ====
+- Jika kita ingin meneruskan akses token atau id pengguna ke browser saat menggunakan JWT, 
+- maka kita dapat menyimpan data akses token tersebut kedalam "Jwt Callbacks" didalam auth.ts,
+- lalu, untuk meneruskan data tersebut kedalam browser, prosesnya terdapat dalam "Session Callbacks" didalam auth.ts
+- jadi sederhananya, {token} yg didapat dari "Jwt Callbacks" akan diteruskan kedalam "Session Callbacks"
+
+==== Prisma hints ====
+- ketika ada pembaruan pada model didalam schema prisma, jangan lupa untuk menjalankan perintah :
+  => npx prisma generate (ini berguna untuk mengenerate model)
+  => npx prisma db push (ini berguna untuk memasang model baru yg telah di generate ke dalam database)
+- lalu, jika ada kasus dimana kita ingin mengahpus semua data lama sebelum melakukan push, maka jalankan perintah :
+  => npx prisma migrate reset (ini berguna untuk melakukan migrasi model baru dan mengahpus semua data model lama)
+  => npx prisma db push (ini berguna untuk memasang model baru yg telah di generate ke dalam database)
+
+==== Edge Runtime dan Prisma ====
+- jadi, alasan kenapa kita memisahkan antara auth.ts dan auth.config.ts adalah karena auth.ts
+  terdapat proses yg tidak mendukung edge runtime, misalnya seperti menggunakan adptor prisma.
+  lalu mengenai callback, sebenarnya secara default callback mendukung edge runtime dan bisa langsung kita gunakan
+  pada middleware(yg secara default berjalan dalam edge runtime), namun, karana pada callback kita saat ini terdapat
+  proses query kedalam database yg menggunakan prisma dan artinya tidak mendukung edge runtime,
+  itulah kenapa kita menulisnya didalam auth.ts, bukan didalam auth.config.ts, dan yg kita gunakan didalam middleware 
+  adalah auth dari auth.config.ts.
+- lalu pengecualian untuk credential didalam providers auth.config.ts, kita bisa menggunakan query untuk interaksi
+  dengan database, itu bisa dilakukan karena credential tidak berjalan dalam edge runtime
+
+==== client side signIn hints ====
+- jika pada server action atau server component kita menggunakan redirect setelah menjalankan fungsi signIn
+  maka didalam client side component kita menggunakan callbackUrl
+
+==== Email Verified hints ====
+- Verifikasi email hanya dilakukan untuk user yg login dengan provider credential(email, password)
+- Sedangkan untuk user yg menggunakan provider seperti google dan github tidak perlu melakukan verifikasi email
+- Itu karena google dan github sudah melakukan verifikasi email ketika email user mendaftar pada platform meneruskan
+
+==== Login with Provider Github and Google hints ====
+- Jadi, ketika kita login menggunakan salah satu provider antara github dan google dan dengan email yg sama,
+- maka kita tidak bisa lagi menggunakan email yg sama pada provider lain
+- misal kita mendaftar atau login dengan menggunakan provider github dengan email akun "example@gmail.com",
+- maka kita tidak bisa lagi menggunakan email tersebut pada saat login atau mendaftar dengan provider google 
+  menggunakan email akun "example@gmail.com". dan ini hanya berlaku ketika ada satu web yg menggunakan metode login dan register
+  dengan menggunakan lebih dari satu provider, misalnya github dan google
+
+==== Session hints ====
+- untuk bisa menggunakan useSession pada client side, kita harus membungkus layout kedalam provider SessionProvider
+  dan mengirimkan auth (sebagai Session) kedalam provider SessionProvider
+
+==== Server Component hints ====
+- Salah satu ciri khas server component adalah, menggunakan async function, dan jika itu server action, maka gunakan "use server"
+- Karena sifat dari server action adalah promise, sehingga kita harus menggunakan async function
+- lalu, jika kita ingin membuat reuseable function untuk server side, maka kita harus meletakkan function
+  tersebut didalam folder lib.
+- dan fungsi tersebut bisa kita gunakan pada proses didalam server action, api routes, dan server component
+- itu karena proses proses didalam server action, api routes, dan server component berjalan dalam server side
+
+==== Client Component hints ====
+- Salah satu ciri khas client component adalah menggunakan "use client" dan tidak menggunakan async function
+- itu karena kita tidak adanya keterlibatan proses promise yg mana proses tersebut biasanya berjalan dalam server side
+- lalu, jika kita ingin membuat fungsi yg reuseable untuk client side, maka kita harus meletakkan function dalam folder 'hooks'
+- dan fungsi tersebut bisa kita gunakan pada proses didalam client component, atau semua proses yg berjalan secara client side
+
+
+==== Hints ketika melakukan update data ====
+- ketika kita melakukan update data didalam database, maka data akan terupdate didalam database
+- namun didalam aplikasi kita mungkin saja tidak akan langsung terupdate
+- terdapat dua cara untuk melakukan update data didalam aplikasi kita :
+- yg pertama dengan menggunakan {update} dari useSession (yg artinya proses berjalan secara client side), 
+- lalu kita bisa memodifikasi token jwt didalam callback dan kemudian kita bisa memperbarui data session 
+  yg ada didalam callbacks dengan data yg diambil dari token jwt
+- modifikasi disini adalah dengan cara menambahkan property didalam token jwt dan didalam session
+- misalnya kita ingin mengambil semua data user yg ada kemungkinan untuk diperbarui, misalnya nama, email, dll
+- maka kita bisa menambahkan property didalam token jwt dan kemudian menambahkan property didalam session berdasarkan token jwt
+- lalu cara yg kedua adalah :
+-
+
+
+==== Hal yg harus diperhatikan ====
+- ketika kita membuat fitur update data pada sebuah aplikasi yg memungkinkan user login menggunakan
+  provider (google, github, dll.), dan login menggunakan credential(email, password)
+- maka, kita tidak bisa menggunakan fitur update data yg sama untuk semua tipe user
+- misalnya pada user yg login dengan menggunakan provider(google, github, dll.), maka harus ada mekanisme khusus untuk
+  menghandle update data untuk user tersebut
+- misalnya untuk update password, maka itu tidak bisa diterapkan pada user yg login menggunakan provider
+- karena password hanya bisa diubah oleh user yg login menggunakan credential(email, password)
+- begitu juga dengan update email, jika user login menggunakan provider, maka email tersebut akan masuk ke tabel account
+
+
+=== Penjelasan tentang useForm , schema, zod, dan resolver ====
+
+useForm:
+- Pemantau utama: useForm adalah hook yang digunakan untuk mengelola logika form, termasuk menangani input data,
+  validasi, dan status form secara keseluruhan.
+- Manajer status: useForm menyimpan nilai input, status validasi (apakah form valid atau tidak), dan pesan error yang terkait
+  dengan field tertentu.
+- Fitur tambahan: useForm menyediakan banyak fitur seperti reset form, mode validasi (onBlur, onChange, atau onSubmit),
+  dan kontrol penuh atas lifecycle form.
+
+SettingsSchema:
+- Buku aturan: Schema (dalam contoh ini adalah SettingsSchema) adalah definisi aturan validasi yang menggunakan library 
+  seperti Zod, Yup, atau lainnya.Aturan ini mendefinisikan tipe data,format, atau batasan lain yang harus dipenuhi
+  oleh input form.
+  == contoh ==
+  const SettingsSchema = z.object({
+  name: z.string().min(3, "Nama harus minimal 3 karakter"),
+  email: z.string().email("Format email tidak valid"),
+});
+- Fungsi utama: Schema membantu menjaga validasi tetap konsisten dan terpusat, sehingga mudah dikelola dan diperbarui.
+
+
+zodResolver:
+- Penjaga pintu: zodResolver adalah middleware yang menghubungkan useForm dengan library validasi seperti Zod.
+  Ia menerjemahkan validasi dari schema ke dalam format yang dapat digunakan oleh useForm.
+Proses:
+=> Data input dari form dikirim ke zodResolver.
+=> zodResolver memvalidasi data menggunakan schema (SettingsSchema).
+=> Jika validasi gagal, pesan error dikembalikan dan ditampilkan oleh useForm.
+
+Contoh Kasus:
+(Misalnya, ada formulir dengan field "Tanggal Lahir"):
+- SettingsSchema: Menentukan aturan bahwa format harus "YYYY-MM-DD".
+- zodResolver: Memvalidasi input pengguna. Jika format salah, pesan error seperti "Format tanggal lahir salah.
+  Contoh: 2000-01-01" akan ditampilkan.
+- useForm: Menyimpan status formulir, seperti apakah pesan error harus ditampilkan atau apakah input sudah valid.
+
+Kesimpulan:
+- useForm: Mengelola status dan lifecycle form.
+- SettingsSchema: Menentukan aturan validasi.
+- zodResolver: Menghubungkan schema dengan form dan memastikan data valid.
+
+Ketiga komponen ini bekerja sama untuk memastikan bahwa data yang dimasukkan ke dalam form adalah valid dan sesuai
+dengan yang diharapkan (sesuai dengan definisi schema). Dengan menggunakan useForm, schema, dan zodResolver, 
+kita dapat membuat formulir yang lebih user-friendly, mengurangi kesalahan input, dan meningkatkan keamanan data.
+
+
+==== callback URL ====
+- callback URL adalah alamat URL yang digunakan untuk mengarahkan pengguna ke halaman tertentu setelah login
+- biasanya callback url digunakan untuk mengarahkan pengguna ke halaman terakhir yg mereka kunjungi sebelumnya
+- misalnya user melakukan logout dari halaman /admin atau /settings, maka ketika user melakukan login lagi,
+  ia akan diarahkan ke halaman tersebut (halaman /admin atau /settings).
+- begitu juga ketika user melakukan login menggunakan provider, maka ia akan diarahkan ke halaman /admin atau /settings

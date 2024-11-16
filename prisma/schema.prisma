@@ -1,0 +1,108 @@
+// prisma/schema.prisma
+datasource db {
+  provider  = "postgresql" // sumber data untuk Prisma
+  url  	    = env("DATABASE_URL") // URL koneksi database
+  // uncomment next line if you use Prisma <5.10
+  // directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// generator untuk prisma bertugas menghasilkan Prisma Client,
+// yaitu sebuah library otomatis yang bisa digunakan untuk berinteraksi dengan database menggunakan kode JavaScript/TypeScript.
+generator client {
+  provider = "prisma-client-js"
+}
+
+// membuat enum type untuk field "role" pada model user
+enum UserRole {
+  ADMIN
+  USER
+}
+
+// membuat model user (merepresentasikan tabel User di database.)
+model User {
+  id            String          @id @default(cuid())
+  name          String?
+  email         String?         @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          UserRole @default(USER) // memiliki referensi type ke enum UserRole
+  accounts      Account[] // artinya memiliki relasi ke tabel account (one to many)
+  isTwoFactorEnabled Boolean @default(false) // field untuk menyimpan status 2FA
+  twoFactorConfirmation TwoFactorConfirmation?  // field ini nantinya memiliki relasi ke table twoFactorConfirmation
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// membuat model account
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String  @unique
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String? @db.Text
+  access_token             String? @db.Text
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String? @db.Text
+  session_state            String?
+ 
+  // dibawah ini definisi relasi antara tabel account dengan user,
+  // dimana field userId pada tabel account, memiliki reference ke id dalam tabel user
+  // dan jika User dihapus, semua Account terkait akan dihapus juga (onDelete: Cascade).
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+ 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+ 
+ // Menjamin bahwa tidak ada duplikasi data pada kombinasi kedua field (provider dan providerAccountId),
+ // misalnya entri 1 (provider = "Google", providerAccountId = "456")
+ // dan entri 2 (provider = "Google", providerAccountId = "987")
+ // selama salah satu dari kedua field tersebut berbeda, kombinasi tersebut tetap valid dan tidak melanggar aturan keunikan.
+  @@unique([provider, providerAccountId]) 
+
+  //  Meningkatkan performa pencarian atau pengambilan data yang melibatkan userId.
+  @@index([userId])
+}
+
+// model untuk verifikasi token user (untuk verifikasi email setelah register)
+model VerificationToken {
+  id String @id @default(cuid())
+  email String
+  token String @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+
+// model untuk menyimpan dan menghandle token reset password
+model PasswordResetToken {
+  id String @id @default(cuid())
+  email String
+  token String @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+// model untuk menyimpan dan menghandle token two factor authentication
+//  yg akan di generate ketika user login dan isTwoFactorEnabled pada table user bernilai true
+model TwoFactorToken {
+  id String @id @default(cuid())
+  email String
+  token String @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
+// model untuk menyimpan dan menghandle data konfirmasi 2FA
+model TwoFactorConfirmation {
+ id String @id @default(cuid())
+ userId String
+ user User @relation(fields: [userId], references: [id], onDelete: Cascade) // memiliki referensi ke table user
+
+ @@unique([userId])
+}
