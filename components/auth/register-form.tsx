@@ -24,6 +24,10 @@ export const RegisterForm = () => {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
+
+  const handleCloseSuccess = () => setSuccess("");
+  const handleCloseError = () => setError("");
+
   const form = useForm<z.infer<typeof RegisterSchema>>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
@@ -38,10 +42,15 @@ export const RegisterForm = () => {
     setSuccess("");
     startTransition(() => {
       registerAction(values).then((data) => {
-        if (data.error) {
-          setError(data.error);
+        if (data?.error) {
+          setError(data?.error);
+          setSuccess("");
+          form.reset();
+          setTimeout(() => setError(""), 5000);
         } else {
           setSuccess(data.success);
+          setError("");
+          setTimeout(() => setSuccess(""), 5000);
           form.reset();
         }
       });
@@ -115,8 +124,8 @@ export const RegisterForm = () => {
               }}
             />
           </div>
-          <FormError message={error} />
-          <FormSuccess message={success} />
+          <FormError message={error} onClose={handleCloseError} />
+          <FormSuccess message={success} onClose={handleCloseSuccess} />
           <Button disabled={isPending} className="w-full" type="submit">
             {isPending ? (
               <div className="flex items-center gap-2">

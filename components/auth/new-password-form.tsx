@@ -28,6 +28,10 @@ export const NewPasswordForm = () => {
   const [isPending, startTransition] = useTransition();
   const searchParams = useSearchParams();
   const token = searchParams.get("token"); // mengambil query url token dan kirim ke newPasswordAction sebagai parameter token
+
+  const handleCloseSuccess = () => setSuccess("");
+  const handleCloseError = () => setError("");
+
   const form = useForm<z.infer<typeof NewPasswordSchema>>({
     resolver: zodResolver(NewPasswordSchema),
     defaultValues: {
@@ -41,9 +45,13 @@ export const NewPasswordForm = () => {
     startTransition(() => {
       newPasswordAction(values, token).then((data) => {
         if (data?.error) {
-          setError(data.error);
+          setError(data?.error);
+          setSuccess("");
+          setTimeout(() => setError(""), 5000);
         } else {
           setSuccess(data?.success);
+          setError("");
+          setTimeout(() => setSuccess(""), 5000);
           form.reset();
         }
       });
@@ -81,8 +89,8 @@ export const NewPasswordForm = () => {
           {/* end password input field */}
 
           {/* error and success message */}
-          <FormError message={error} />
-          <FormSuccess message={success} />
+          <FormError message={error} onClose={handleCloseError} />
+          <FormSuccess message={success} onClose={handleCloseSuccess} />
           {/* end error and success message */}
 
           {/* button */}

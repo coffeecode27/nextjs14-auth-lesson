@@ -9,6 +9,9 @@ import { UserRole } from "@prisma/client";
 import { toast } from "sonner";
 
 const AdminPage = () => {
+  const handleCloseSuccess = () => {
+    return;
+  };
   // cara menggunakan server side menggunakan server action dalam nextjs
   const onServerActionClick = async () => {
     admin().then((data) => {
@@ -37,7 +40,10 @@ const AdminPage = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         <RoleGate allowedRole={UserRole.ADMIN}>
-          <FormSuccess message="You are allowed to view this page" />
+          <FormSuccess
+            message="You are allowed to view this page"
+            onClose={handleCloseSuccess}
+          />
         </RoleGate>
         <div className="flex flex-row  items-center justify-between rounded-lg border border-slate-700 p-3 shadow-md">
           <p className="text-sm font-medium">Admin-only API Route</p>

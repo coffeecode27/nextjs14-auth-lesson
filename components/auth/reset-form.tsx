@@ -25,6 +25,10 @@ export const ResetForm = () => {
   const [error, setError] = useState<string | undefined>("");
   const [success, setSuccess] = useState<string | undefined>("");
   const [isPending, startTransition] = useTransition();
+
+  const handleCloseSuccess = () => setSuccess("");
+  const handleCloseError = () => setError("");
+
   const form = useForm<z.infer<typeof ResetSchema>>({
     resolver: zodResolver(ResetSchema),
     defaultValues: {
@@ -35,14 +39,18 @@ export const ResetForm = () => {
   const onSubmit = (values: z.infer<typeof ResetSchema>) => {
     setError("");
     setSuccess("");
-    console.log("values", values);
     startTransition(() => {
       resetAction(values).then((data) => {
-        if (data.error) {
-          setError(data.error);
-        } else {
-          setSuccess(data.success);
+        if (data?.error) {
+          setError(data?.error);
+          setSuccess("");
           form.reset();
+          setTimeout(() => setError(""), 5000);
+        } else {
+          setSuccess(data?.success);
+          setError("");
+          form.reset();
+          setTimeout(() => setSuccess(""), 5000);
         }
       });
     });
@@ -83,8 +91,8 @@ export const ResetForm = () => {
           {/* end email input field */}
 
           {/* error and success message */}
-          <FormError message={error} />
-          <FormSuccess message={success} />
+          <FormError message={error} onClose={handleCloseError} />
+          <FormSuccess message={success} onClose={handleCloseSuccess} />
           {/* end error and success message */}
 
           {/* button */}
