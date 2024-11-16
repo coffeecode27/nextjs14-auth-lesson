@@ -28,7 +28,7 @@ export const LoginForm = () => {
   const handleCloseError = () => setError("");
   const handleCloseSuccessTwoFactor = () => setSuccessTwoFactor("");
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl");
+  const callbackUrl = searchParams?.get("callbackUrl") || null;
   const urlError =
     searchParams.get("error") === "OAuthAccountNotLinked"
       ? "Email already linked to another account!"
